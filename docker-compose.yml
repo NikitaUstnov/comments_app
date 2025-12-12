@@ -63,9 +63,9 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://comments_user:comments_pass@postgres:5432/comments_db
-      REDIS_HOST: redis
+      REDIS_HOST: localhost
       REDIS_PORT: 6379
-      ELASTICSEARCH_NODE: http://elasticsearch:9200
+      ELASTICSEARCH_NODE: http://localhost:9200
       JWT_SECRET: your-secret-key-change-in-production
       MAX_FILE_SIZE: 104857600
     depends_on:

@@ -14,6 +14,7 @@ import helmet from '@fastify/helmet';
 import fastifyStatic from '@fastify/static';
 import multiPart from '@fastify/multipart';
 import { join } from 'path';
+import fastifyCookie from '@fastify/cookie';
 
 type AppMode = 'development' | 'production';
 
@@ -56,6 +57,9 @@ class App {
     isProduction: boolean = true,
     app: NestFastifyApplication,
   ): void {
+    if (!isProduction) {
+      return;
+    }
     const options = new DocumentBuilder()
       .setTitle('Comments App')
       .setDescription('Comments App API')
@@ -63,7 +67,7 @@ class App {
       .addTag('Comments App')
       .build();
     const document = SwaggerModule.createDocument(app, options);
-    isProduction && SwaggerModule.setup('docs', app, document);
+    SwaggerModule.setup('docs', app, document);
   }
 
   /**
@@ -97,8 +101,8 @@ class App {
       crossOriginResourcePolicy: false,
     });
     await fastifyAdapter.register(fastifyStatic, {
-      root: join(__dirname, '..', 'public'),
-      prefix: '/public/',
+      root: join(__dirname, '..', 'uploads'),
+      prefix: '/uploads/',
       setHeaders: (res, path, stat) => {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
@@ -107,8 +111,12 @@ class App {
     await fastifyAdapter.register(multiPart, {
       limits: {
         files: 1, // allow only one file per request
-        fileSize: 5 * 1024, // 5MB
+        fileSize: 5 * 1024 * 1024, // 5MB
       },
+    });
+
+    await fastifyAdapter.register(fastifyCookie, {
+      secret: this.configService.get('JWT_SECRET', 'secret-key'),
     });
 
     app.setGlobalPrefix('api');
