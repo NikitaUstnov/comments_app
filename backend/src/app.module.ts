@@ -5,6 +5,7 @@ import { PostModule } from './api/post/post.module';
 import { CommentModule } from './api/comment/comment.module';
 import { AuthModule } from './api/auth/auth.module';
 import { DatabaseModule } from './services/database/database.module';
+import { RabbitModule } from './services/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
@@ -14,10 +15,12 @@ import { DatabaseModule } from './services/database/database.module';
       ignoreEnvFile: false,
       expandVariables: true,
     }),
+    DatabaseModule,
     UserModule,
     PostModule,
     CommentModule,
     AuthModule,
+    RabbitModule,
   ],
 })
 export class AppModule {}

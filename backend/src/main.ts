@@ -15,6 +15,7 @@ import fastifyStatic from '@fastify/static';
 import multiPart from '@fastify/multipart';
 import { join } from 'path';
 import fastifyCookie from '@fastify/cookie';
+import { CookieSessionInterceptor } from './common/interceptors/cookie-session.interceptor';
 
 type AppMode = 'development' | 'production';
 
@@ -91,12 +92,6 @@ class App {
       },
     );
 
-    //global validation pipe
-    app.useGlobalPipes(new ValidationPipe());
-
-    //setting up swagger
-    this.documentBuilder(isProduction, app);
-
     await fastifyAdapter.register(helmet, {
       crossOriginResourcePolicy: false,
     });
@@ -116,8 +111,17 @@ class App {
     });
 
     await fastifyAdapter.register(fastifyCookie, {
-      secret: this.configService.get('JWT_SECRET', 'secret-key'),
+      secret: this.configService.get('COOKIE_SECRET', 'secret-key'),
     });
+
+    //global validation pipe
+    app.useGlobalPipes(new ValidationPipe());
+
+    // global interceptors
+    app.useGlobalInterceptors(new CookieSessionInterceptor(this.configService));
+
+    //setting up swagger
+    this.documentBuilder(isProduction, app);
 
     app.setGlobalPrefix('api');
     app.enableCors({
