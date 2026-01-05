@@ -58,9 +58,8 @@ class App {
     isProduction: boolean = true,
     app: NestFastifyApplication,
   ): void {
-    if (!isProduction) {
-      return;
-    }
+    if (isProduction) return;
+
     const options = new DocumentBuilder()
       .setTitle('Comments App')
       .setDescription('Comments App API')
@@ -118,7 +117,7 @@ class App {
     app.useGlobalPipes(new ValidationPipe());
 
     // global interceptors
-    app.useGlobalInterceptors(new CookieSessionInterceptor(this.configService));
+    app.useGlobalInterceptors(new CookieSessionInterceptor());
 
     //setting up swagger
     this.documentBuilder(isProduction, app);

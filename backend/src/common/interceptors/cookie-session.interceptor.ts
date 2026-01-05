@@ -6,49 +6,26 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { FastifyRequest, FastifyReply } from 'fastify';
-import { randomUUID } from 'crypto';
-import { ConfigService } from '@nestjs/config';
+import { FastifyRequest } from 'fastify';
+import { COOKIE_NAME } from '../constants/common-constants';
 
 @Injectable()
 export class CookieSessionInterceptor implements NestInterceptor {
   private readonly logger = new Logger(CookieSessionInterceptor.name);
-  private configService: ConfigService;
-
-  constructor(config: ConfigService) {
-    this.configService = config;
-  }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest<FastifyRequest>();
-    const response = context.switchToHttp().getResponse<FastifyReply>();
-
     const cookies = request.cookies || {};
 
-    if (!cookies.guestId) {
-      const guestId = randomUUID();
-      const appMode = this.configService.get<string>('MODE');
+    const guestSession = cookies[COOKIE_NAME];
 
-      const secure = appMode === 'production' ? true : false;
-
-      response.setCookie('guestId', guestId, {
-        path: '/',
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        secure,
-        sameSite: 'lax',
-      });
-
-      (request as any).guestId = guestId;
+    if (guestSession) {
+      (request as any).guestSessionToken = guestSession;
+      this.logger.debug(`Guest session found: ${guestSession}`);
     } else {
-      (request as any).guestId = cookies.guestId;
+      this.logger.debug('No guest session cookie');
     }
 
-    return next.handle().pipe(
-      tap(() => {
-        this.logger.log('Response handled with cookie session');
-      }),
-    );
+    return next.handle();
   }
 }

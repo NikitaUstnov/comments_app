@@ -19,7 +19,6 @@ export class User {
   @Column({
     type: 'varchar',
     length: 100,
-    default: () => `Guest_${Date.now()}`,
   })
   username: string;
 

@@ -1,36 +1,40 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
-import { UpdateUserDto } from '../dto/user.dto';
 
 @Injectable()
 export class UserRepository {
-  constructor(private readonly userRepository: Repository<User>) {}
+  constructor(
+    @InjectRepository(User)
+    private readonly repo: Repository<User>,
+  ) {}
 
   async findByEmail(email: string): Promise<User | null> {
-    return await this.userRepository.findOne({
-      where: { email },
-    });
+    return this.repo.findOne({ where: { email } });
   }
 
   async findById(id: number): Promise<User | null> {
-    return await this.userRepository.findOne({
-      where: { id },
+    return this.repo.findOne({ where: { id } });
+  }
+
+  async findBySessionToken(token: string): Promise<User | null> {
+    return this.repo.findOne({
+      where: { session_token: token, is_guest: true },
     });
   }
 
-  async create(createUserDto: UpdateUserDto): Promise<User | null> {
-    return await this.userRepository.save(createUserDto);
+  async create(data: Partial<User>): Promise<User> {
+    const user = this.repo.create(data);
+    return this.repo.save(user);
   }
 
-  async removeById(id: number): Promise<DeleteResult> {
-    return await this.userRepository.delete(id);
+  async update(id: number, data: Partial<User>): Promise<User | null> {
+    await this.repo.update(id, data);
+    return this.findById(id);
   }
 
-  async updateById(
-    id: number,
-    updateUserDto: UpdateUserDto,
-  ): Promise<UpdateResult> {
-    return await this.userRepository.update(id, updateUserDto);
+  async remove(id: number): Promise<void> {
+    await this.repo.delete(id);
   }
 }
